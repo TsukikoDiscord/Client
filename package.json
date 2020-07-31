@@ -1,0 +1,30 @@
+{
+  "name": "tsukiko",
+  "version": "0.0.1",
+  "description": "A Discord role management bot. Nothing else.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "role",
+    "server",
+    "guild",
+    "management"
+  ],
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "@amanda/arganalyser": "github:AmandaDiscord/ArgumentAnalyser",
+    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#353c135cecaa612ad9ac88620e902084fa9ad87d",
+    "@amanda/neko": "github:AmandaDiscord/NEKO",
+    "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu",
+    "@amanda/reloader": "github:AmandaDiscord/Reloader",
+    "discord.js": "github:AmandaDiscord/discord.js#amanda-v12",
+    "eslint": "^7.0.0",
+    "sqlite": "^4.0.7",
+    "sqlite3": "^4.2.0",
+    "typescript": "^3.9.7"
+  }
+}
