@@ -259,5 +259,75 @@ commands.assign([
 				}
 			}
 		}
+	},
+	{
+		usage: "<Role:Role>",
+		description: "Displays a list of who is in a role",
+		aliases: ["inrole", "in"],
+		category: "roles",
+		example: "^inrole Members",
+		async process(msg, suffix) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("This command does not work in DMs.");
+			const role = await utils.findRole(msg, suffix);
+			if (!role) return msg.channel.send(`${msg.author.username}, that's not a valid role.`);
+			const members = msg.guild.members.cache.filter(mem => mem.roles.cache.has(role.id));
+			if (members.size == 0) return msg.channel.send(`${msg.author.username}, there are no members in that role.`);
+			const marray = members.array();
+			const embed = new Discord.MessageEmbed()
+				.setAuthor(`Members in ${role.name}`)
+				.setColor("36393E");
+			if (marray.length <= 22 && marray.length <= 1970) {
+				embed.setDescription(marray.map((member, index) => `${index + 1}. ${member.user.tag}`).join("\n"));
+				msg.channel.send(utils.contentify(msg.channel, embed));
+			} else {
+				/** @type {Array<Array<Discord.GuildMember>>} */
+				const pages = [];
+				let currentPage = [];
+				let currentPageLength = 0;
+				const currentPageMaxLength = 1970;
+				const itemsPerPage = 20;
+				const itemsPerPageTolerance = 2;
+				for (let i = 0; i < marray.length; i++) {
+					const row = marray[i];
+					if ((currentPage.length >= itemsPerPage && marray.length - i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
+						pages.push(currentPage);
+						currentPage = [];
+						currentPageLength = 0;
+					}
+					currentPage.push(row);
+					currentPageLength += row.length + 1;
+				}
+				utils.paginate(msg.channel, pages.length, page => {
+					embed.setFooter(`Page ${page + 1} of ${pages.length}`);
+					embed.setDescription(pages[page].map((member, index) => `${index + 1 + (page > 1 ? page * itemsPerPage : 0)}. ${member.user.tag}`).join("\n"));
+					return utils.contentify(msg.channel, embed);
+				});
+			}
+		}
+	},
+	{
+		usage: "<Role:Role> <User:User>",
+		description: "Staff command to manage a member's roles",
+		aliases: ["role", "roles"],
+		category: "roles",
+		example: "^role PapiOphidian Members",
+		async process(msg, suffix) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("This command does not work in DMs.");
+			const args = ArgumentAnalyser.format(suffix.split(" "));
+			const role = await utils.findRole(msg, args[0] || "");
+			const member = await msg.guild.findMember(msg, args[1] || "", true);
+			if (!role) return msg.channel.send(`${msg.author.username}, that's not a valid role`);
+			if (!member) return msg.channel.send(`${msg.author.username}, that's not a valid user`);
+			if (role.position >= msg.member.roles.highest.position) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
+			if (!role.editable) return msg.channel.send(`${msg.author.username}, that role is either higher than mine or is my highest role, so I cannot give it to you.`);
+			const mode = member.roles.cache.has(role.id) ? "remove" : "add";
+			try {
+				if (mode == "add") await member.roles.add(role.id, `Given by ${msg.author.tag}`);
+				else await member.roles.remove(role.id, `Removed by ${msg.author.tag}`);
+			} catch {
+				return msg.channel.send("There was an error when attempting to manage that person's roles.");
+			}
+			return msg.channel.send(`Role ${mode == "add" ? `added. Gave ${role.name}` : `removed. Took ${role.name}`}.`);
+		}
 	}
 ]);
