@@ -313,6 +313,7 @@ commands.assign([
 		example: "^role PapiOphidian Members",
 		async process(msg, suffix) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("This command does not work in DMs.");
+			if (!msg.member.permissions.has("MANAGE_ROLES")) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that person's roles (Manage Roles)`);
 			const args = ArgumentAnalyser.format(suffix.split(" "));
 			const role = await utils.findRole(msg, args[0] || "");
 			const member = await msg.guild.findMember(msg, args[1] || "", true);
