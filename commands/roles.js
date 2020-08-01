@@ -121,7 +121,8 @@ commands.assign([
 				if (!data || data.length == 0) return msg.channel.send(`${msg.author.username}, there are no self assignable roles set up in this server.`);
 				const embed = new Discord.MessageEmbed()
 					.setAuthor(`Self Assignable Roles for ${msg.guild.name}`)
-					.setColor("36393E");
+					.setColor("36393E")
+					.setFooter("Use `^selfassign <Role>` to give yourself a role`");
 				if (data.length <= 22 && data.join("\n").length <= 1970) {
 					embed.setDescription(data.map((item, index) => `${index + 1}. ${msg.guild.roles.cache.get(item) ? msg.guild.roles.cache.get(item).name : item}`).join("\n"));
 					msg.channel.send(utils.contentify(msg.channel, embed));
@@ -306,9 +307,9 @@ commands.assign([
 		}
 	},
 	{
-		usage: "<Role:Role> <User:User>",
+		usage: "<Role:Role> [User:User]",
 		description: "Staff command to manage a member's roles",
-		aliases: ["role", "roles"],
+		aliases: ["role"],
 		category: "roles",
 		example: "^role PapiOphidian Members",
 		async process(msg, suffix) {
