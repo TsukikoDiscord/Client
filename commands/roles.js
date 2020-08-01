@@ -110,7 +110,7 @@ commands.assign([
 	{
 		usage: "[Role:Role] [\"add\"|\"delete\"]",
 		description: "Main Self Assignable Role interface command",
-		aliases: ["selfassign", "sar"],
+		aliases: ["selfassign", "sar", "iam", "iamnot"],
 		category: "roles",
 		example: "^sar \"cool people\"",
 		async process(msg, suffix) {
