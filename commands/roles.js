@@ -109,7 +109,7 @@ commands.assign([
 	},
 	{
 		usage: "[Role:Role] [\"add\"|\"delete\"]",
-		description: "Manage your own roles",
+		description: "Main Self Assignable Role interface command",
 		aliases: ["selfassign", "sar"],
 		category: "roles",
 		example: "^sar \"cool people\"",
@@ -186,7 +186,7 @@ commands.assign([
 	},
 	{
 		usage: "[Role:Role] [\"add\"|\"delete\"] [addafter] [removeafter]",
-		description: "Set up join roles",
+		description: "Main Auto Join Role interface command",
 		aliases: ["join", "jr"],
 		category: "roles",
 		example: "^join \"cool people\" add 10min",
