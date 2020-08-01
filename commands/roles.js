@@ -51,7 +51,7 @@ commands.assign([
 						// eslint-disable-next-line no-empty-function
 						}).catch(() => {});
 					}
-					msg.channel.send(`Alright! People who react to that message with that emoji will receive ${role.name}`);
+					msg.channel.send(`Alright! People who react to that message with ${emojiid.custom ? (client.emojis.cache.get(emojiid.unique) ? client.emojis.cache.get(emojiid.unique).toString() : "that emoji") : emojiid.usable} will receive ${role.name}`);
 				} else if (mode == "delete") {
 					if (!channeldata || channeldata.length == 0) return msg.channel.send(`${msg.author.username}, there are no reaction roles to manage on that message`);
 					if (typeof role == "string" && role == "all") {
@@ -168,7 +168,7 @@ commands.assign([
 						if (!data.find(item => role.id == item)) return msg.channel.send(`${msg.author.username}, that role does not exist in this server's self assignable role list and does not need to be deleted.`);
 						await sql.all("DELETE FROM SelfRoles WHERE guildID =? AND roleID =?", [msg.guild.id, role.id]);
 					}
-					return msg.channel.send(`Alright! That role was ${createmode == "add" ? "added to" : "removed from"} the list of self assignable roles.`);
+					return msg.channel.send(`Alright! ${role.name} was ${createmode == "add" ? "added to" : "removed from"} the list of self assignable roles.`);
 				}
 				if (!data.includes(role.id)) return msg.channel.send(`${msg.author.username}, that role is not in the self assignable role list`);
 				if (!role.editable) return msg.channel.send(`${msg.author.username}, that role is either higher than mine or is my highest role, so I cannot give it to you.`);
@@ -225,7 +225,7 @@ commands.assign([
 					if (data && data.length > 0 && !data.find(item => item.roleID == role.id)) return msg.channel.send(`${msg.author.username}, that role does not exist in this server's join role list and does not need to be deleted.`);
 					await sql.all("DELETE FROM JoinRoles WHERE guildID =? AND roleID =?", [msg.guild.id, role.id]);
 				}
-				return msg.channel.send(`Alright! ${role.name} was ${mode == "add" ? "added to" : "deleted from"} the auto join role list. ${mode == "add" && addafter && addafter !== 0 ? `Added after: ${utils.shortTime(addafter, "ms")}` : ""} ${mode == "add" && removeafter && removeafter !== 0 ? `Removed after: ${utils.shortTime(removeafter, "ms")}` : ""}`);
+				return msg.channel.send(`Alright! ${role.name} was ${mode == "add" ? "added to" : "deleted from"} the auto join role list. ${mode == "add" && addafter && addafter !== 0 ? `Add after: ${utils.shortTime(addafter, "ms")}` : ""} ${mode == "add" && removeafter && removeafter !== 0 ? `Remove after: ${utils.shortTime(removeafter, "ms")}` : ""}`);
 			} else {
 				if (!data || data.length == 0) return msg.channel.send(`${msg.author.username}, there are no auto join roles set up in this server.`);
 				const embed = new Discord.MessageEmbed()
