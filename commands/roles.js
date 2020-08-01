@@ -152,11 +152,13 @@ commands.assign([
 				}
 			} else {
 				const args = ArgumentAnalyser.format(suffix.split(" "));
-				const validator = new ArgumentAnalyser({ message: msg, definition: this.usage, args: args, length: 2, findFunctions: { role: utils.findRole } }, { search: true });
-				await validator.validate();
-				if (!validator.usable) return;
-				/** @type {[Discord.Role, "add" | "delete"]} */
-				const [role, createmode] = validator.collected;
+				let name = args[0];
+				if (!msg.member.permissions.has("MANAGE_ROLES") && args[1]) name = args.join(" ");
+				const role = await utils.findRole(msg, name);
+				if (!role) return msg.channel.send(`${msg.author.username}, that is not a valid role.`);
+				let createmode;
+				if (msg.member.permissions.has("MANAGE_ROLES")) createmode = args[1];
+				if (createmode && (!["add", "delete"].includes(createmode))) return msg.channel.send(`${msg.author.username}, your mode for managing the self assignable role needs to be either \`add\` or \`delete\``);
 				if (createmode) {
 					if (!msg.member.permissions.has("MANAGE_ROLES")) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage this server's Self Assignable Roles (Manage Roles)`);
 					if (role.position >= msg.member.roles.highest.position && !msg.guild.ownerID == msg.author.id) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
