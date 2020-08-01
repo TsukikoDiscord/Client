@@ -273,6 +273,48 @@ const utils = {
 		return array[index];
 	},
 	/**
+	 * @param {string[][]} rows
+	 * @param {any[]} align
+	 * @param {(currentLine?: number) => string} surround
+	 * @param {string} spacer
+	 * @returns {string[]}
+	 */
+	tableifyRows: function(rows, align, surround = () => "", spacer = " ") { // SC: en space
+		/** @type {string[]} */
+		const output = [];
+		const maxLength = [];
+		for (let i = 0; i < rows[0].length; i++) {
+			let thisLength = 0;
+			for (let j = 0; j < rows.length; j++) {
+				if (thisLength < rows[j][i].length) thisLength = rows[j][i].length;
+			}
+			maxLength.push(thisLength);
+		}
+		for (let i = 0; i < rows.length; i++) {
+			let line = "";
+			for (let j = 0; j < rows[0].length; j++) {
+				if (align[j] == "left" || align[j] == "right") {
+					line += surround(i);
+					if (align[j] == "left") {
+						const pad = " ​";
+						const padding = pad.repeat(maxLength[j] - rows[i][j].length);
+						line += rows[i][j] + padding;
+					} else if (align[j] == "right") {
+						const pad = "​ ";
+						const padding = pad.repeat(maxLength[j] - rows[i][j].length);
+						line += padding + rows[i][j];
+					}
+					line += surround(i);
+				} else {
+					line += rows[i][j];
+				}
+				if (j < rows[0].length - 1) line += spacer;
+			}
+			output.push(line);
+		}
+		return output;
+	},
+	/**
 	 * @param {{ name: string, id: string }} emoji
 	 */
 	emojiID: function(emoji) {
@@ -284,6 +326,54 @@ const utils = {
 			else name = emoji.name;
 			return { unique: name, usable: name === emoji.name ? emoji.name : String.fromCodePoint(name), custom: false };
 		} else return null;
+	},
+	/**
+	 * @param {string[]} rows
+	 * @param {number} maxLength
+	 * @param {number} itemsPerPage
+	 * @param {number} itemsPerPageTolerance
+	 */
+	createPages: function(rows, maxLength, itemsPerPage, itemsPerPageTolerance) {
+		const pages = [];
+		let currentPage = [];
+		let currentPageLength = 0;
+		const currentPageMaxLength = maxLength;
+		for (let i = 0; i < rows.length; i++) {
+			const row = rows[i];
+			if ((currentPage.length >= itemsPerPage && rows.length - i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
+				pages.push(currentPage);
+				currentPage = [];
+				currentPageLength = 0;
+			}
+			currentPage.push(row);
+			currentPageLength += row.length + 1;
+		}
+		pages.push(currentPage);
+		return pages;
+	},
+	/**
+	 * @param {Discord.TextChannel|Discord.DMChannel} channel
+	 * @param {string[]} title
+	 * @param {string[][]} rows
+	 * @param {Array<"left" | "right">} align
+	 * @param {number} maxLength
+	 * @param {string} author
+	 * @param {string} [footer]
+	 */
+	createPagination: function(channel, title, rows, align, maxLength, author, footer) {
+		let alignedRows = utils.tableifyRows([title].concat(rows), align, () => "`");
+		const formattedTitle = alignedRows[0].replace(/`.+?`/g, sub => `__**\`${sub}\`**__`);
+		alignedRows = alignedRows.slice(1);
+		const pages = utils.createPages(alignedRows, maxLength - formattedTitle.length - 1, 16, 4);
+		utils.paginate(channel, pages.length, page => {
+			return utils.contentify(channel,
+				new Discord.MessageEmbed()
+					.setTitle(author)
+					.setColor(0x36393f)
+					.setDescription(`${formattedTitle}\n${pages[page].join("\n")}`)
+					.setFooter(`Page ${page + 1} of ${pages.length}${footer ? `\n${footer}` : ""}`)
+			);
+		});
 	},
 	/**
 	 * @param {Discord.TextChannel|Discord.DMChannel} channel

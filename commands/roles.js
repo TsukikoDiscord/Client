@@ -74,36 +74,17 @@ commands.assign([
 				}
 			} else {
 				if (!channeldata || channeldata.length == 0) return msg.channel.send(`${msg.author.username}, there are no reaction roles set up for that message`);
-				const embed = new Discord.MessageEmbed()
-					.setAuthor(`Reaction Roles for ${msg.guild.name}`)
-					.setColor("36393E");
-				if (channeldata.length <= 22 && channeldata.join("\n").length <= 2000) {
-					embed.setDescription(channeldata.map(item => `Emoji ${item.emojiID} > ${msg.guild.roles.cache.get(item.roleID) ? msg.guild.roles.cache.get(item.roleID).name : item.roleID}`).join("\n"));
-					msg.channel.send(utils.contentify(msg.channel, embed));
-				} else {
-					/** @type {Array<Array<{ channelID: string, messageID: string, emojiID: string, roleID: string }>>} */
-					const pages = [];
-					let currentPage = [];
-					let currentPageLength = 0;
-					const currentPageMaxLength = 2000;
-					const itemsPerPage = 20;
-					const itemsPerPageTolerance = 2;
-					for (let i = 0; i < channeldata.length; i++) {
-						const row = channeldata[i];
-						if ((currentPage.length >= itemsPerPage && channeldata.length - i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
-							pages.push(currentPage);
-							currentPage = [];
-							currentPageLength = 0;
-						}
-						currentPage.push(row);
-						currentPageLength += row.length + 1;
-					}
-					utils.paginate(msg.channel, pages.length, page => {
-						embed.setFooter(`Page ${page + 1} of ${pages.length}`);
-						embed.setDescription(pages[page].map(item => `Emoji ${item.emojiID} > ${msg.guild.roles.cache.get(item.roleID) ? msg.guild.roles.cache.get(item.roleID).name : item.roleID}`).join("\n"));
-						return utils.contentify(msg.channel, embed);
-					});
-				}
+				return utils.createPagination(msg.channel,
+					["Role Name", "Role ID", "Emoji"],
+					channeldata.map(i => [
+						msg.guild.roles.cache.get(i.roleID) ? msg.guild.roles.cache.get(i.roleID).name : "Unknown",
+						i.roleID,
+						String.fromCodePoint(i.emojiID) ? String.fromCodePoint(i.emojiID) : (client.emojis.cache.get(i.emojiID) ? client.emojis.cache.get(i.emojiID).toString() : i.emojiID)
+					]),
+					["left", "left", "left"],
+					2000,
+					"Reaction Roles for Message"
+				);
 			}
 		}
 	},
@@ -119,37 +100,14 @@ commands.assign([
 			const data = await sql.all("SELECT roleID FROM SelfRoles WHERE guildID =?", msg.guild.id).then(d => d.map(item => item.roleID));
 			if (!suffix) {
 				if (!data || data.length == 0) return msg.channel.send(`${msg.author.username}, there are no self assignable roles set up in this server.`);
-				const embed = new Discord.MessageEmbed()
-					.setAuthor(`Self Assignable Roles for ${msg.guild.name}`)
-					.setColor("36393E")
-					.setFooter("Use ^selfassign <Role> to give yourself a role");
-				if (data.length <= 22 && data.join("\n").length <= 1970) {
-					embed.setDescription(data.map((item, index) => `${index + 1}. ${msg.guild.roles.cache.get(item) ? msg.guild.roles.cache.get(item).name : item}`).join("\n"));
-					msg.channel.send(utils.contentify(msg.channel, embed));
-				} else {
-					/** @type {Array<Array<string>>} */
-					const pages = [];
-					let currentPage = [];
-					let currentPageLength = 0;
-					const currentPageMaxLength = 1970;
-					const itemsPerPage = 20;
-					const itemsPerPageTolerance = 2;
-					for (let i = 0; i < data.length; i++) {
-						const row = data[i];
-						if ((currentPage.length >= itemsPerPage && data.length - i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
-							pages.push(currentPage);
-							currentPage = [];
-							currentPageLength = 0;
-						}
-						currentPage.push(row);
-						currentPageLength += row.length + 1;
-					}
-					utils.paginate(msg.channel, pages.length, page => {
-						embed.setFooter(`Page ${page + 1} of ${pages.length}\nUse ^selfassign <Role> to give yourself a role`);
-						embed.setDescription(pages[page].map((item, index) => `${index + 1 + (page > 1 ? page * itemsPerPage : 0)}. ${msg.guild.roles.cache.get(item) ? msg.guild.roles.cache.get(item).name : item}`).join("\n"));
-						return utils.contentify(msg.channel, embed);
-					});
-				}
+				return utils.createPagination(msg.channel,
+					["Role Name", "Role ID"],
+					data.map(i => [msg.guild.roles.cache.get(i) ? msg.guild.roles.cache.get(i).name : "Unknown", i]),
+					["left", "left"],
+					2000,
+					`Self Assignable Roles for ${msg.guild.name}`,
+					"Use ^selfassign <Role> to give yourself a role"
+				);
 			} else {
 				const args = ArgumentAnalyser.format(suffix.split(" "));
 				let name = args[0];
@@ -230,36 +188,17 @@ commands.assign([
 				return msg.channel.send(`Alright! ${role.name} was ${mode == "add" ? "added to" : "deleted from"} the auto join role list. ${mode == "add" && addafter && addafter !== 0 ? `Add after: ${utils.shortTime(addafter, "ms")}` : ""} ${mode == "add" && removeafter && removeafter !== 0 ? `Remove after: ${utils.shortTime(removeafter, "ms")}` : ""}`);
 			} else {
 				if (!data || data.length == 0) return msg.channel.send(`${msg.author.username}, there are no auto join roles set up in this server.`);
-				const embed = new Discord.MessageEmbed()
-					.setAuthor(`Join Roles for ${msg.guild.name}`)
-					.setColor("36393E");
-				if (data.length <= 22 && data.join("\n").length <= 1970) {
-					embed.setDescription(data.map((item, index) => `${index + 1}. ${msg.guild.roles.cache.get(item.roleID) ? msg.guild.roles.cache.get(item.roleID).name : item.roleID} (Add Timeout: ${item.timeout ? utils.shortTime(item.timeout, "ms") : 0}) (Remove Timeout: ${item.removeAfter ? utils.shortTime(item.removeAfter, "ms") : 0})`).join("\n"));
-					msg.channel.send(utils.contentify(msg.channel, embed));
-				} else {
-					/** @type {Array<Array<{ guildID: string, roleID: string, timeout: number, removeAfter: number }>>} */
-					const pages = [];
-					let currentPage = [];
-					let currentPageLength = 0;
-					const currentPageMaxLength = 1970;
-					const itemsPerPage = 20;
-					const itemsPerPageTolerance = 2;
-					for (let i = 0; i < data.length; i++) {
-						const row = data[i];
-						if ((currentPage.length >= itemsPerPage && data.length - i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
-							pages.push(currentPage);
-							currentPage = [];
-							currentPageLength = 0;
-						}
-						currentPage.push(row);
-						currentPageLength += row.length + 1;
-					}
-					utils.paginate(msg.channel, pages.length, page => {
-						embed.setFooter(`Page ${page + 1} of ${pages.length}`);
-						embed.setDescription(pages[page].map((item, index) => `${index + 1 + (page > 1 ? page * itemsPerPage : 0)}. ${msg.guild.roles.cache.get(item.roleID) ? msg.guild.roles.cache.get(item.roleID).name : item.roleID} Add Timeout: ${item.timeout ? utils.shortTime(item.timeout, "ms") : 0}) (Remove Timeout: ${item.removeAfter ? utils.shortTime(item.removeAfter, "ms") : 0})`).join("\n"));
-						return utils.contentify(msg.channel, embed);
-					});
-				}
+				return utils.createPagination(msg.channel,
+					["Role Name", "Role ID", "Add After", "Remove After"],
+					data.map(i =>
+						[msg.guild.roles.cache.get(i.roleID) ? msg.guild.roles.cache.get(i.roleID).name : "Unknown",
+							i.roleID,
+							i.timeout ? utils.shortTime(i.timeout, "ms") : String(0),
+							i.removeAfter ? utils.shortTime(i.removeAfter, "ms") : String(0)]),
+					["left", "left", "left", "left"],
+					2000,
+					`Join Roles for ${msg.guild.name}`
+				);
 			}
 		}
 	},
@@ -275,37 +214,13 @@ commands.assign([
 			if (!role) return msg.channel.send(`${msg.author.username}, that's not a valid role.`);
 			const members = msg.guild.members.cache.filter(mem => mem.roles.cache.has(role.id));
 			if (members.size == 0) return msg.channel.send(`${msg.author.username}, there are no members in that role.`);
-			const marray = members.array();
-			const embed = new Discord.MessageEmbed()
-				.setAuthor(`Members in ${role.name}`)
-				.setColor("36393E");
-			if (marray.length <= 22 && marray.length <= 1970) {
-				embed.setDescription(marray.map((member, index) => `${index + 1}. ${member.user.tag}`).join("\n"));
-				msg.channel.send(utils.contentify(msg.channel, embed));
-			} else {
-				/** @type {Array<Array<Discord.GuildMember>>} */
-				const pages = [];
-				let currentPage = [];
-				let currentPageLength = 0;
-				const currentPageMaxLength = 1970;
-				const itemsPerPage = 20;
-				const itemsPerPageTolerance = 2;
-				for (let i = 0; i < marray.length; i++) {
-					const row = marray[i];
-					if ((currentPage.length >= itemsPerPage && marray.length - i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
-						pages.push(currentPage);
-						currentPage = [];
-						currentPageLength = 0;
-					}
-					currentPage.push(row);
-					currentPageLength += row.length + 1;
-				}
-				utils.paginate(msg.channel, pages.length, page => {
-					embed.setFooter(`Page ${page + 1} of ${pages.length}`);
-					embed.setDescription(pages[page].map((member, index) => `${index + 1 + (page > 1 ? page * itemsPerPage : 0)}. ${member.user.tag}`).join("\n"));
-					return utils.contentify(msg.channel, embed);
-				});
-			}
+			return utils.createPagination(msg.channel,
+				["User tag", "User ID"],
+				members.map(m => [m.user ? m.user.tag : m.displayName, `(${m.id})`]),
+				["left", "left"],
+				2000,
+				`Members in ${role.name}`
+			);
 		}
 	},
 	{
