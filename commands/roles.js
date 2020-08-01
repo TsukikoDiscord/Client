@@ -122,7 +122,7 @@ commands.assign([
 				const embed = new Discord.MessageEmbed()
 					.setAuthor(`Self Assignable Roles for ${msg.guild.name}`)
 					.setColor("36393E")
-					.setFooter("Use `^selfassign <Role>` to give yourself a role`");
+					.setFooter("Use `^selfassign <Role>` to give yourself a role");
 				if (data.length <= 22 && data.join("\n").length <= 1970) {
 					embed.setDescription(data.map((item, index) => `${index + 1}. ${msg.guild.roles.cache.get(item) ? msg.guild.roles.cache.get(item).name : item}`).join("\n"));
 					msg.channel.send(utils.contentify(msg.channel, embed));
@@ -145,7 +145,7 @@ commands.assign([
 						currentPageLength += row.length + 1;
 					}
 					utils.paginate(msg.channel, pages.length, page => {
-						embed.setFooter(`Page ${page + 1} of ${pages.length}`);
+						embed.setFooter(`Page ${page + 1} of ${pages.length}\nUse \`^selfassign <Role>\` to give yourself a role`);
 						embed.setDescription(pages[page].map((item, index) => `${index + 1 + (page > 1 ? page * itemsPerPage : 0)}. ${msg.guild.roles.cache.get(item) ? msg.guild.roles.cache.get(item).name : item}`).join("\n"));
 						return utils.contentify(msg.channel, embed);
 					});
