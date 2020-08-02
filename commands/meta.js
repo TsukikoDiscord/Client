@@ -62,7 +62,7 @@ commands.assign([
 	},
 	{
 		usage: "None",
-		description: "Add Amanda to a server",
+		description: "Add me to a server",
 		aliases: ["invite", "inv"],
 		category: "meta",
 		example: "^invite",
@@ -76,7 +76,7 @@ commands.assign([
 	},
 	{
 		usage: "None",
-		description: "Displays information about Amanda",
+		description: "Displays information about me",
 		aliases: ["info", "inf"],
 		category: "meta",
 		example: "^info",
