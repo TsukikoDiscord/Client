@@ -13,8 +13,8 @@ const Reloader = require("@amanda/reloader");
 const passthrough = require("./passthrough.js");
 const config = require("./config.js");
 
-const intents = new Discord.Intents(["DIRECT_MESSAGES", "GUILDS", "GUILD_EMOJIS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_MEMBERS", "GUILD_PRESENCES"]);
-const client = new Neko({ disableMentions: "everyone", ws: { intents }, optimizations: { disablePresences: true }, fetchAllMembers: true });
+const intents = new Discord.Intents(["DIRECT_MESSAGES", "GUILDS", "GUILD_EMOJIS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_MEMBERS"]);
+const client = new Neko({ disableMentions: "everyone", messageCacheMaxSize: 0, ws: { intents }, optimizations: { disablePresences: true } });
 const reloader = new Reloader(true, __dirname);
 const commands = new CommandManager();
 
