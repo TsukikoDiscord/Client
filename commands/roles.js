@@ -234,7 +234,7 @@ commands.assign([
 			if (!msg.member.permissions.has("MANAGE_ROLES")) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that person's roles (Manage Roles)`);
 			const args = ArgumentAnalyser.format(suffix.split(" "));
 			const role = await utils.findRole(msg, args[0] || "");
-			const member = await msg.guild.findMember(msg, args[1] || "", true);
+			const member = await utils.findMember(msg, args[1] || "", true);
 			if (!role) return msg.channel.send(`${msg.author.username}, that's not a valid role`);
 			if (!member) return msg.channel.send(`${msg.author.username}, that's not a valid user`);
 			if (role.position >= msg.member.roles.highest.position) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
