@@ -67,6 +67,7 @@ async function manageMessage(msg) {
 				if (e.code == 10008) return;
 				if (e.code == 50013) return;
 			}
+			console.error(e);
 			const msgTxt = `command ${cmdTxt} failed\n` + (await utils.stringify(e));
 			const embed = new Discord.MessageEmbed()
 				.setDescription(msgTxt)
