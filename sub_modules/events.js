@@ -124,6 +124,7 @@ async function manageReady() {
  * @param {Discord.GuildMember} member
  */
 async function manageGuildMemberAdd(member) {
+	if (member.user.bot) return;
 	/** @type {Array<{ guildID: string, roleID: string, timeout: number, removeAfter: number }>} */
 	const roles = await sql.all("SELECT * FROM JoinRoles WHERE guildID =?", member.guild.id);
 	if (!roles || roles.length === 0) return;
