@@ -136,14 +136,15 @@ async function manageGuildMemberAdd(member) {
  * @param {Discord.User} user
  */
 async function manageReactionAdd(data, channel, user) {
-	ReactionMenu.handler(data, channel, user, client);
 	if (user.bot) return;
+	ReactionMenu.handler(data, channel, user, client);
 	if (channel instanceof Discord.DMChannel) return;
 	const id = utils.emojiID(data.emoji);
 	/** @type {Array<{ emojiID: string, roleID: string }>} */
 	const reactions = await sql.all("SELECT emojiID, roleID FROM ReactionRoles WHERE messageID =? AND emojiID =?", [data.message_id, id.unique]);
 	if (!reactions || reactions.length == 0) return;
-	const member = channel.guild.members.cache.get(user.id);
+	let member = channel.guild.members.cache.get(data.user_id);
+	if (!member) member = await channel.guild.members.fetch(data.user_id);
 	addRoles(reactions.map(reaction => { return { roleID: reaction.roleID, timeout: 0, removeAfter: 0 }; }), member);
 }
 
@@ -159,7 +160,8 @@ async function manageReactionRemove(data, channel, user) {
 	/** @type {Array<{ emojiID: string, roleID: string }>} */
 	const reactions = await sql.all("SELECT emojiID, roleID FROM ReactionRoles WHERE messageID =? AND emojiID =?", [data.message_id, id.unique]);
 	if (!reactions || reactions.length == 0) return;
-	const member = channel.guild.members.cache.get(user.id);
+	let member = channel.guild.members.cache.get(data.user_id);
+	if (!member) member = await channel.guild.members.fetch(data.user_id);
 	removeRoles(reactions.map(reaction => { return { roleID: reaction.roleID, removeAfter: 0 }; }), member);
 }
 
