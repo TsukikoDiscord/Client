@@ -1,0 +1,13 @@
+[package]
+name = "tsukiko"
+version = "0.0.1"
+authors = ["Papi <bradleyjplatt@yahoo.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+env_logger = "0.6"
+serenity = "0.8"
+kankyo = "0.2"
+log = "0.4"
