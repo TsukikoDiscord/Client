@@ -16,6 +16,7 @@ if (client.readyAt != null) starting = false;
 if (starting) utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady);
 utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage);
 utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), data => {
+	if (data instanceof Discord.Message) return manageMessage(data);
 	if (data && data.id && data.channel_id && data.content && data.author) {
 		const channel = client.channels.cache.get(data.channel_id);
 		if (channel instanceof Discord.DMChannel || (channel instanceof Discord.TextChannel && data.member)) {
@@ -132,7 +133,7 @@ async function manageGuildMemberAdd(member) {
 }
 
 /**
- * @param {any} data
+ * @param {import("@amanda/neko").DiscordReactionData} data
  * @param {Discord.DMChannel | Discord.TextChannel} channel
  * @param {Discord.User} user
  */
@@ -150,7 +151,7 @@ async function manageReactionAdd(data, channel, user) {
 }
 
 /**
- * @param {any} data
+ * @param {import("@amanda/neko").DiscordReactionData} data
  * @param {Discord.DMChannel | Discord.TextChannel} channel
  * @param {Discord.User} user
  */

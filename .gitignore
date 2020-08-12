@@ -2,3 +2,5 @@
 /databases
 config.js
 *.sqlite
+.env
+/target
