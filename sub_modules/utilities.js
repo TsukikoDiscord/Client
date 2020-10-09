@@ -106,7 +106,7 @@ const utils = {
 					else list = fetched;
 				} else return fetched;
 			}
-			const embed = new Discord.MessageEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i + 1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E");
+			const embed = new Discord.MessageEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i + 1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(0x2f3136);
 			const selectmessage = await message.channel.send(utils.contentify(message.channel, embed));
 			const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 });
 			return collector.next.then(newmessage => {
@@ -162,7 +162,7 @@ const utils = {
 					return d;
 				} else return null;
 			}
-			const embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i + 1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E");
+			const embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i + 1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(0x2f3136);
 			const selectmessage = await message.channel.send(utils.contentify(message.channel, embed));
 			const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 });
 			return collector.next.then(newmessage => {
@@ -215,7 +215,7 @@ const utils = {
 			// @ts-ignore
 			if (list.length == 1) return list[0];
 			if (list.length == 0) return null;
-			const embed = new Discord.MessageEmbed().setTitle("Channel selection").setDescription(list.map((item, i) => `${item.type == "voice" ? "<:voice:674569797278760961>" : "<:text:674569797278892032>"} ${i + 1}. ${item.name}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E");
+			const embed = new Discord.MessageEmbed().setTitle("Channel selection").setDescription(list.map((item, i) => `${item.type == "voice" ? "<:voice:674569797278760961>" : "<:text:674569797278892032>"} ${i + 1}. ${item.name}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(0x2f3136);
 			const selectmessage = await message.channel.send(utils.contentify(message.channel, embed));
 			const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 });
 			return collector.next.then(newmessage => {
@@ -326,7 +326,7 @@ const utils = {
 					}));
 				if (list.length == 1) return resolve(list[0]);
 				if (list.length == 0) return resolve(null);
-				const embed = new Discord.MessageEmbed().setTitle("Role selection").setDescription(list.map((item, i) => `${i + 1}. ${item.name} - ${item.id}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E");
+				const embed = new Discord.MessageEmbed().setTitle("Role selection").setDescription(list.map((item, i) => `${i + 1}. ${item.name} - ${item.id}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(0x2f3136);
 				const selectmessage = await message.channel.send(utils.contentify(message.channel, embed));
 				const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 });
 				// eslint-disable-next-line no-return-await
@@ -477,7 +477,7 @@ const utils = {
 			return utils.contentify(channel,
 				new Discord.MessageEmbed()
 					.setTitle(author)
-					.setColor(0x36393f)
+					.setColor(0x2f3136)
 					.setDescription(`${formattedTitle}\n${pages[page].join("\n")}`)
 					.setFooter(`Page ${page + 1} of ${pages.length}${footer ? `\n${footer}` : ""}`)
 			);

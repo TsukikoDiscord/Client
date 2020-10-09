@@ -70,7 +70,7 @@ commands.assign([
 			const embed = new Discord.MessageEmbed()
 				.setTitle("Wanna invite me?")
 				.setDescription("Notice: You must have manage server permissions to invite me.\nI don't ask for many permissions. Just what I need. You can invite me [here](https://discord.com/api/oauth2/authorize?client_id=709907646387322932&permissions=268714048&scope=bot)")
-				.setColor(0x36393f);
+				.setColor(0x2f3136);
 			msg.channel.send(utils.contentify(msg.channel, embed));
 		}
 	},
@@ -98,7 +98,7 @@ commands.assign([
 						value: "Invite: [here](https://discord.com/api/oauth2/authorize?client_id=709907646387322932&permissions=268714048&scope=bot)"
 					}
 				])
-				.setColor("36393E");
+				.setColor(0x2f3136);
 			return msg.channel.send(utils.contentify(msg.channel, embed));
 		}
 	},
@@ -124,7 +124,7 @@ commands.assign([
 						.setAuthor(`Help for ${command.aliases[0]}`)
 						.setDescription(`Arguments: ${def}\nDescription: ${command.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExample: ${command.example || "N.A."}`)
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input.\nTip: If you want to treat multiple words separated by a space as 1, use quotation marks (\", ' or `)")
-						.setColor("36393E");
+						.setColor(0x2f3136);
 					msg.channel.send(utils.contentify(msg.channel, embed));
 				} else if (commands.categories.get(suffix)) {
 					const cat = commands.categories.get(suffix);
@@ -149,7 +149,7 @@ commands.assign([
 								return `\`${cmd.aliases[0]}${" ​".repeat(maxLength - cmd.aliases[0].length)}\` ${cmd.description}`;
 							}).join("\n") +
 						"\n\nType `^help [command]` to see more information about a command")
-						.setColor(0x36393f);
+						.setColor(0x2f3136);
 					if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for a mobile-compatible view");
 					msg.author.send(embed).then(() => reply(msg)).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)));
 				} else {
@@ -162,7 +162,7 @@ commands.assign([
 					.setDescription(
 						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n${"Type `^help [category]` to see all commands in that category."
 						+ "\nType `^help [command]` to see more information about a command."}`)
-					.setColor("36393E");
+					.setColor(0x2f3136);
 				msg.author.send(embed).then(() => reply(msg)).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)));
 			}
 		}
