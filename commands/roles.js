@@ -9,7 +9,7 @@ const ArgumentAnalyser = require("@amanda/arganalyser");
 
 commands.assign([
 	{
-		usage: "<Channel:Channel> <Message ID> [\"add\"|\"delete\"] [Role:Role|\"all\"] [Emoji]",
+		usage: "<Channel:Channel> <Message ID> [\"add\" | \"delete\"] [Role:Role | \"all\"] [Emoji]",
 		description: "Main ReactionRole interface command",
 		aliases: ["reactionrole", "rr"],
 		category: "roles",
@@ -89,7 +89,7 @@ commands.assign([
 		}
 	},
 	{
-		usage: "[Role:Role] [\"add\"|\"delete\"]",
+		usage: "[Role:Role] [\"add\" | \"delete\"]",
 		description: "Main Self Assignable Role interface command",
 		aliases: ["selfassign", "sar", "iam", "iamnot"],
 		category: "roles",
@@ -145,7 +145,7 @@ commands.assign([
 		}
 	},
 	{
-		usage: "[Role:Role] [\"add\"|\"delete\"] [addafter] [removeafter]",
+		usage: "[Role:Role] [\"add\" | \"delete\"] [addafter] [removeafter]",
 		description: "Main Auto Join Role interface command",
 		aliases: ["join", "jr"],
 		category: "roles",

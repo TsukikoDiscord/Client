@@ -74,7 +74,7 @@ const utils = {
 	 * @param {Discord.Message} message Message Object
 	 * @param {string} string String to search members by
 	 * @param {boolean} [self=false] If the function should return the `message` author's member Object
-	 * @returns {Promise<Discord.GuildMember>}
+	 * @returns {Promise<?Discord.GuildMember>}
 	 */
 	findMember: async function(message, string, self = false) {
 		string = string.toLowerCase();
@@ -127,7 +127,7 @@ const utils = {
 	 * @param {Discord.Message} message Message Object
 	 * @param {string} string String to search users by
 	 * @param {boolean} [self=false] If the function should return the `message` author's user Object
-	 * @returns {Promise<Discord.User>}
+	 * @returns {Promise<?Discord.User>}
 	 */
 	findUser: async function(message, string, self = false) {
 		string = string.toLowerCase();
@@ -184,7 +184,7 @@ const utils = {
 	 * @param {Discord.Message} message Message Object
 	 * @param {string} string String to search channels by
 	 * @param {boolean} [self=false] If the function should return `message`.channel
-	 * @returns {Promise<Discord.TextChannel | Discord.VoiceChannel>}
+	 * @returns {Promise<?(Discord.TextChannel | Discord.VoiceChannel)>}
 	 */
 	findChannel: async function(message, string, self) {
 		// eslint-disable-next-line no-async-promise-executor
@@ -249,6 +249,7 @@ const utils = {
 	 * @param {string} search
 	 * @param {Discord.Guild} guild
 	 * @param {number} [limit=10]
+	 * @returns {Promise<?(Discord.GuildMember | Array<Discord.GuildMember>)>}
 	 */
 	fetch: async function(search, guild, limit = 10) {
 		/** @type {"id" | "username" | "tag"} */
@@ -294,7 +295,7 @@ const utils = {
 	 * Find a channel in a guild
 	 * @param {Discord.Message} message Message Object
 	 * @param {string} string String to search roles by
-	 * @returns {Promise<Discord.Role>}
+	 * @returns {Promise<?Discord.Role>}
 	 */
 	function(message, string) {
 		// eslint-disable-next-line no-async-promise-executor
@@ -546,6 +547,7 @@ const utils = {
 	/**
 	 * Parses user duration inputs and converts it to MS
 	 * @param {string} input
+	 * @returns {?number}
 	 */
 	function(input) {
 		if (!input) return null;

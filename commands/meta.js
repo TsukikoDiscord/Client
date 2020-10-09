@@ -103,7 +103,7 @@ commands.assign([
 		}
 	},
 	{
-		usage: "[command|category]",
+		usage: "[command | category]",
 		description: "Your average help command",
 		aliases: ["help", "h", "commands", "cmds"],
 		category: "meta",
@@ -151,11 +151,7 @@ commands.assign([
 						"\n\nType `^help [command]` to see more information about a command")
 						.setColor(0x36393f);
 					if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for a mobile-compatible view");
-					try {
-						msg.author.send(embed).then(() => reply(msg));
-					} catch (e) {
-						msg.channel.send(utils.contentify(msg.channel, embed));
-					}
+					msg.author.send(embed).then(() => reply(msg)).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)));
 				} else {
 					embed = new Discord.MessageEmbed().setDescription(`${msg.author.tag}, I couldn't find the help panel for that command`).setColor("B60000");
 					msg.channel.send(utils.contentify(msg.channel, embed));
@@ -167,11 +163,7 @@ commands.assign([
 						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n${"Type `^help [category]` to see all commands in that category."
 						+ "\nType `^help [command]` to see more information about a command."}`)
 					.setColor("36393E");
-				try {
-					msg.author.send(embed).then(m => reply(msg));
-				} catch (e) {
-					msg.channel.send(utils.contentify(msg.channel, embed)).catch(console.error);
-				}
+				msg.author.send(embed).then(() => reply(msg)).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)));
 			}
 		}
 	}
