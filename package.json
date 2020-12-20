@@ -16,17 +16,17 @@
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "@amanda/arganalyser": "github:AmandaDiscord/ArgumentAnalyser",
+    "@amanda/arganalyser": "github:AmandaDiscord/ArgumentAnalyser#74edc0dee4e5e97068ff9d418f59d1ad467bf7e4",
     "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#353c135cecaa612ad9ac88620e902084fa9ad87d",
-    "@amanda/neko": "github:AmandaDiscord/NEKO",
-    "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu",
-    "@amanda/reloader": "github:AmandaDiscord/Reloader",
-    "discord.js": "^12.3.1",
-    "sqlite": "^4.0.14",
+    "@amanda/neko": "github:AmandaDiscord/NEKO#28642b2722268e98f98b19504fea1cb8095eaf1f",
+    "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#868d5866de4360be05cb093ed8627989ca0aae91",
+    "@amanda/reloader": "github:AmandaDiscord/Reloader#a54a50c400e214029d2f17115456450ff82a389a",
+    "discord.js": "^12.5.1",
+    "sqlite": "^4.0.18",
     "sqlite3": "^5.0.0"
   },
   "devDependencies": {
-    "eslint": "^7.10.0",
-    "typescript": "^4.0.3"
+    "eslint": "^7.16.0",
+    "typescript": "^4.1.3"
   }
 }
