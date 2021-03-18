@@ -228,7 +228,7 @@ commands.assign([
 		description: "Staff command to manage a member's roles",
 		aliases: ["role"],
 		category: "roles",
-		example: "^role PapiOphidian Members",
+		example: "^role Members PapiOphidian",
 		async process(msg, suffix) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("This command does not work in DMs.");
 			if (!msg.member.permissions.has("MANAGE_ROLES")) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that person's roles (Manage Roles)`);
