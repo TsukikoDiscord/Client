@@ -1,6 +1,6 @@
 {
   "name": "tsukiko",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A Discord role management bot. Nothing else.",
   "main": "index.js",
   "scripts": {
@@ -21,12 +21,12 @@
     "@amanda/neko": "github:AmandaDiscord/NEKO#28642b2722268e98f98b19504fea1cb8095eaf1f",
     "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#868d5866de4360be05cb093ed8627989ca0aae91",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#a54a50c400e214029d2f17115456450ff82a389a",
-    "discord.js": "^12.5.1",
-    "sqlite": "^4.0.18",
-    "sqlite3": "^5.0.0"
+    "discord.js": "^12.5.3",
+    "sqlite": "^4.0.21",
+    "sqlite3": "^5.0.2"
   },
   "devDependencies": {
-    "eslint": "^7.16.0",
-    "typescript": "^4.1.3"
+    "eslint": "^7.24.0",
+    "typescript": "^4.2.4"
   }
 }
