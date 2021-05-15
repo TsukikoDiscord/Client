@@ -449,7 +449,7 @@ const utils = {
 		return pages;
 	},
 	/**
-	 * @param {Discord.TextChannel|Discord.DMChannel} channel
+	 * @param {Discord.TextChannel|Discord.DMChannel|Discord.NewsChannel} channel
 	 * @param {string[]} title
 	 * @param {string[][]} rows
 	 * @param {Array<"left" | "right">} align
@@ -473,7 +473,7 @@ const utils = {
 		});
 	},
 	/**
-	 * @param {Discord.TextChannel|Discord.DMChannel} channel
+	 * @param {Discord.TextChannel|Discord.DMChannel|Discord.NewsChannel} channel
 	 * @param {number} pageCount
 	 * @param {(page: number) => any} callback
 	 */

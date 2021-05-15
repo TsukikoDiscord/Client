@@ -32,6 +32,7 @@ sync.addTemporaryListener(client, "messageUpdate", data => {
 sync.addTemporaryListener(client, "guildMemberAdd", manageGuildMemberAdd);
 sync.addTemporaryListener(client, "messageReactionAdd", manageReactionAdd);
 sync.addTemporaryListener(client, "messageReactionRemove", manageReactionRemove);
+sync.addTemporaryListener(client, "voiceStateUpdate", manageVoiceStateUpdate);
 sync.addTemporaryListener(client, "shardDisconnected", (reason) => {
 	if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}.`);
 	if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now() - lastAttemptedLogins.slice(-1)[0] / 1000)} seconds ago.`);
@@ -211,6 +212,7 @@ async function removeRoles(roles, member) {
 			if (!guild.members.cache.get(member.id)) return;
 			if (!dRole.editable) continue;
 			member.roles.remove(role.roleID, `${client.user.username} auto-role`);
+			sql.run("DELETE FROM OfflineEvents WHERE guildID =? AND userID =? AND roleID =?", [guild.id, member.id, role.roleID]);
 		}
 	}
 }
@@ -241,10 +243,26 @@ async function addRoles(roles, member) {
 			if (!guild.members.cache.get(member.id)) return;
 			if (!dRole.editable) continue;
 			member.roles.add(role.roleID, `${client.user.username} auto-role`);
+			sql.run("DELETE FROM OfflineEvents WHERE guildID =? AND userID =? AND roleID =?", [guild.id, member.id, role.roleID]);
 		}
 
 		if (role.removeAfter !== 0) {
 			removeRoles([{ roleID: role.roleID, removeAfter: role.timeout ? role.timeout + role.removeAfter : role.removeAfter }], member);
 		}
 	}
+}
+
+/**
+ * @param {Discord.VoiceState} oldState
+ * @param {Discord.VoiceState} newState
+ */
+async function manageVoiceStateUpdate(oldState, newState) { // action 0 = add, 1 = remove. condition 0 = on join, 1 = on leave
+	const oldChannelDif = oldState.channelID ? await sql.all("SELECT * FROM VoiceRoles WHERE channelID =?", [oldState.channelID]) : [];
+	const newChannelDif = newState.channelID ? await sql.all("SELECT * FROM VoiceRoles WHERE channelID =?", [newState.channelID]) : [];
+
+	addRoles(oldChannelDif.filter(r => (r.action === 0 && r.condition === 1)).map(r => { return { roleID: r.roleID, timeout: r.timoeut }; }), newState.member);
+	removeRoles(newChannelDif.filter(r => (r.action === 1 && r.condition === 0)).map(r => { return { roleID: r.roleID, timeout: r.timeout }; }), newState.member);
+
+	addRoles(newChannelDif.filter(r => r.action === 0 && r.condition === 0).map(r => { return { roleID: r.roleID, timeout: r.timoeut }; }), newState.member);
+	removeRoles(oldChannelDif.filter(r => r.action === 1 && r.condition === 1).map(r => { return { roleID: r.roleID, timeout: r.timoeut }; }), newState.member);
 }

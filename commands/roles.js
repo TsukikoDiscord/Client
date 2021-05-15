@@ -35,7 +35,7 @@ commands.assign([
 			if (mode && (mode == "add" || mode == "delete")) {
 				if (!msg.member.permissions.has("MANAGE_ROLES")) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage this server's Reaction Roles (Manage Roles)`);
 				if (!role) return msg.channel.send(`${msg.author.username}, you need to provide a role`);
-				if (typeof role !== "string" && role.position >= msg.member.roles.highest.position && !msg.guild.ownerID == msg.author.id) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
+				if (typeof role !== "string" && role.position >= msg.member.roles.highest.position && msg.guild.ownerID !== msg.author.id) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
 				if (!emoji && !(mode == "delete" && role == "all")) return msg.channel.send(`${msg.author.username}, you also need to provide an emoji`);
 				/** @type {Discord.Message} */
 				let message;
@@ -125,7 +125,7 @@ commands.assign([
 				if (createmode && (!["add", "delete"].includes(createmode))) return msg.channel.send(`${msg.author.username}, your mode for managing the self assignable role needs to be either \`add\` or \`delete\``);
 				if (createmode) {
 					if (!msg.member.permissions.has("MANAGE_ROLES")) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage this server's Self Assignable Roles (Manage Roles)`);
-					if (role.position >= msg.member.roles.highest.position && !msg.guild.ownerID == msg.author.id) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
+					if (role.position >= msg.member.roles.highest.position && msg.guild.ownerID !== msg.author.id) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
 
 					if (createmode == "add") {
 						if (data.find(item => role.id == item)) return msg.channel.send(`${msg.author.username}, that role is already set up for self assignable roles.`);
@@ -152,7 +152,7 @@ commands.assign([
 	},
 	{
 		usage: "[Role:Role] [\"add\" | \"delete\"] [addafter] [removeafter]",
-		description: "Main Auto Join Role interface command",
+		description: "Manage what roles to give to members after joining",
 		aliases: ["join", "jr"],
 		category: "roles",
 		examples: ["^join \"cool people\" add 10min"],
@@ -175,7 +175,7 @@ commands.assign([
 					return msg.channel.send(`${role.name}\n	Add after ${utils.shortTime(roledata.timeout, "ms")}\n	Remove after: ${utils.shortTime(roledata.removeAfter, "ms")}`);
 				}
 				if (!msg.member.permissions.has("MANAGE_ROLES")) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage this server's Join Roles (Manage Roles)`);
-				if (role.position >= msg.member.roles.highest.position && !msg.guild.ownerID == msg.author.id) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
+				if (role.position >= msg.member.roles.highest.position && msg.guild.ownerID !== msg.author.id) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
 
 				let addafter, removeafter;
 				if (mode == "add") {
@@ -188,7 +188,7 @@ commands.assign([
 					if ((addtimeout || removetimeout) && ((addafter > 1000 * 60 * 60 * 24 * 7) || (removeafter > 1000 * 60 * 60 * 24 * 7))) return msg.channel.send(`${msg.author.username}, the longest duration allowed for \`add after\` or \`remove after\` is 1 week.`);
 
 					await sql.all("INSERT INTO JoinRoles (guildID, roleID, timeout, removeAfter) VALUES (?, ?, ?, ?)", [msg.guild.id, role.id, addafter || 0, removeafter || 0]);
-				} else {
+				} else if (mode == "delete") {
 					if (data && data.length > 0 && !data.find(item => item.roleID == role.id)) return msg.channel.send(`${msg.author.username}, that role does not exist in this server's join role list and does not need to be deleted.`);
 					await sql.all("DELETE FROM JoinRoles WHERE guildID =? AND roleID =?", [msg.guild.id, role.id]);
 				}
@@ -207,6 +207,75 @@ commands.assign([
 					`Join Roles for ${msg.guild.name}`
 				);
 			}
+		}
+	},
+	{
+		usage: "[Role:Role] [Channel:Channel] [\"add\" | \"delete\"] [\"add\" | \"remove\"] [\"join\" | \"leave\"] [toggleafter]",
+		description: "Modify what roles to give or remove to users when they join or leave a voice channel",
+		aliases: ["vcroles", "vcr"],
+		category: "roles",
+		examples: [
+			"^vcroles \"no mic access\" talking-vc add add join",
+			"^vcroles muted going-to-brazil remove leave"
+		],
+		async process(msg, suffix) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("This command does not work in DMs.");
+			const args = ArgumentAnalyser.format(suffix.split(" "));
+			// @ts-ignore
+			const validator = new ArgumentAnalyser({ message: msg, definition: this.usage, args: args, length: 6, findFunctions: { role: utils.findRole, channel: utils.findChannel } }, { search: true });
+			await validator.validate();
+			if (args.length > 1 && !validator.usable) return;
+			/** @type {[Discord.Role, Discord.VoiceChannel, "add" | "delete", "add" | "remove", "join" | "leave", string]} */
+			// @ts-ignore
+			const [role, channel, mode, rolemode, condition, toggletimeout] = validator.collected;
+			const data = await sql.all("SELECT * FROM VoiceRoles WHERE guildID =?", [msg.guild.id]);
+			if (!role) {
+				if (!data || data.length == 0) return msg.channel.send(`${msg.author.username}, there are no auto voice channel roles set up in this server.`);
+				return utils.createPagination(msg.channel,
+					["Channel", "Role", "Condition", "Mode"],
+					data.sort((a, b) => Number(a.channelID) + Number(b.channelID)).map(r => [msg.guild.channels.cache.get(r.channelID) ? msg.guild.channels.cache.get(r.channelID).name : `Deleted Voice Channel (${r.channelID})`, msg.guild.roles.cache.get(r.roleID) ? msg.guild.roles.cache.get(r.roleID).name : `Deleted Role (${r.roleID})`, r.condition === 0 ? "On join" : "On leave", r.action === 0 ? "Give" : "Take"]),
+					["left", "left", "left", "left"],
+					2000,
+					`Voice Channel Roles for ${msg.guild.name}`
+				);
+			}
+
+			if (!channel) return msg.channel.send(`${msg.author.username}, you need to provide a valid channel to modify or view configuration`);
+			if (!(channel instanceof Discord.VoiceChannel)) return msg.channel.send(`${msg.author.username}, the channel you provided is not a voice channel`);
+
+			if (!mode) {
+				const channeldata = data.filter(r => r.channelID === channel.id);
+				if (!channeldata.length) return msg.channel.send(`${msg.author.username}, there is no roles set up for that voice channel`);
+				return utils.createPagination(msg.channel,
+					["Role", "Condition", "Mode"],
+					channeldata.map(r => [msg.guild.roles.cache.get(r.roleID) ? msg.guild.roles.cache.get(r.roleID).name : `Deleted Role (${r.roleID})`, r.condition === 0 ? "On join" : "On leave", r.action === 0 ? "Give" : "Take"]),
+					["left", "left", "left"],
+					2000,
+					`Roles configured for ${channel.name}`
+				);
+			}
+
+			let toggle = 0;
+			if (rolemode === "remove") toggle = 1;
+			let toggleCondition = 0;
+			if (condition === "leave") toggleCondition = 1;
+			let toggleafter = 0;
+			if (toggletimeout) toggleafter = utils.parseTime(toggletimeout);
+
+			if (!msg.member.permissions.has("MANAGE_ROLES")) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage this server's Voice Channel Roles (Manage Roles)`);
+			if (role.position >= msg.member.roles.highest.position && msg.guild.ownerID !== msg.author.id) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
+
+			if (!["add", "delete"].includes(mode)) return msg.channel.send(`${msg.author.username}, you didn't provide a valid mode to add a config or delete one. Valid modes are add or delete`);
+
+			if (mode === "add") {
+				if (data && data.length && data.find(r => r.channelID === channel.id && r.roleID === role.id && r.action === toggle)) return msg.channel.send(`${msg.author.username}, that role is already set to be ${toggle === 0 ? "added" : "removed"} on join or leave in that channel.`);
+				await sql.all("INSERT INTO VoiceRoles (channelID, guildID, roleID, action, condition, timeout) VALUES (?, ?, ?, ?, ?, ?)", [channel.id, msg.guild.id, role.id, toggle, toggleCondition, toggleafter]);
+			} else {
+				if (!data || data.length == 0) return msg.channel.send(`${msg.author.username}, there are no auto voice channel roles set up in this server.`);
+				if (!data.find(r => r.channelID === channel.id && r.roleID === role.id && r.action === toggle)) return msg.channel.send(`${msg.author.username}, that role isn't set up ${toggle === 0 ? "added" : "removed"} on join or leave in that channel`);
+				await sql.run("DELETE FROM VoiceRoles WHERE channelID =? AND roleID =? AND action =?", [channel.id, role.id, toggle]);
+			}
+			return msg.channel.send(`Alright! ${role.name} will ${mode === "add" ? "now" : "no longer"} be ${rolemode === "add" ? "added" : "removed"} when a member ${mode === "add" ? (toggleCondition === 0 ? "joins" : "leaves") : "joins or leaves"} ${channel.name}${mode === "add" ? ` with ${toggleafter === 0 ? "no delay" : `a delay of ${utils.shortTime(toggleafter, "ms")}`} ` : ""}.`);
 		}
 	},
 	{

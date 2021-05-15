@@ -4,7 +4,7 @@
  * @typedef {Object} Passthrough
  * @property {import("discord.js").Client} client
  * @property {import("heatsync")} sync
- * @property {import("@amanda/commandmanager")} commands
+ * @property {import("@amanda/commandmanager")<[import("discord.js").Message, string]>} commands
  * @property {import("./config.js")} config
  * @property {import("sqlite").Database} sql
  */
