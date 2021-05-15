@@ -1,21 +1,26 @@
+// @ts-check
+
 const sqlite = require("sqlite");
 const sqlite3 = require("sqlite3");
 const Discord = require("discord.js");
 const { Neko, OptimizedGuild, OptimizedPresence, OptimizedUser } = require("@amanda/neko");
 
+// @ts-ignore
 Discord.Structures.extend("Guild", () => OptimizedGuild);
+// @ts-ignore
 Discord.Structures.extend("Presence", () => OptimizedPresence);
+// @ts-ignore
 Discord.Structures.extend("User", () => OptimizedUser);
 
 const CommandManager = require("@amanda/commandmanager");
-const Reloader = require("@amanda/reloader");
+const Heatsync = require("heatsync");
 
 const passthrough = require("./passthrough.js");
 const config = require("./config.js");
 
 const intents = new Discord.Intents(["DIRECT_MESSAGES", "GUILDS", "GUILD_EMOJIS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_MEMBERS"]);
 const client = new Neko({ disableMentions: "everyone", ws: { intents }, optimizations: { disablePresences: true, disableMessageCaching: true } });
-const reloader = new Reloader(true, __dirname);
+const sync = new Heatsync();
 const commands = new CommandManager();
 
 (async () => {
@@ -24,13 +29,9 @@ const commands = new CommandManager();
 		driver: sqlite3.Database
 	});
 
-	Object.assign(passthrough, { client, reloader, commands, config, sql, reloadEvent: reloader.reloadEvent });
+	Object.assign(passthrough, { client, sync, commands, config, sql });
 
-	reloader.watch([
-		"./sub_modules/utilities.js"
-	]);
-
-	reloader.watchAndLoad([
+	sync.require([
 		"./sub_modules/events.js",
 		"./sub_modules/stdin.js",
 		"./commands/admin.js",

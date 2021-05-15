@@ -1,9 +1,13 @@
+// @ts-check
+
 const Discord = require("discord.js");
 
-const { client, commands, sql, reloader } = require("../passthrough.js");
+const { client, commands, sql, sync } = require("../passthrough.js");
 
-const utils = require("../sub_modules/utilities.js");
-reloader.sync("./sub_modules/utilities.js", utils);
+/**
+ * @type {import("../sub_modules/utilities")}
+ */
+const utils = sync.require("../sub_modules/utilities.js");
 
 const ArgumentAnalyser = require("@amanda/arganalyser");
 
@@ -13,23 +17,25 @@ commands.assign([
 		description: "Main ReactionRole interface command",
 		aliases: ["reactionrole", "rr"],
 		category: "roles",
-		example: "^rr general 012345678987654 add \"cool people\" 😎",
+		examples: ["^rr general 012345678987654 add \"cool people\" 😎"],
 		async process(msg, suffix) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("This command does not work in DMs.");
 			const args = ArgumentAnalyser.format(suffix.split(" "));
+			// @ts-ignore
 			const validator = new ArgumentAnalyser({ message: msg, definition: this.usage, args: args, length: 5, findFunctions: { role: utils.findRole, channel: utils.findChannel } }, { search: true, checkViewable: true });
 			await validator.validate();
 			if (!validator.usable) return;
 			const data = validator.collected;
-			/** @type {[Discord.TextChannel, string, string, Discord.Role, string]} */
+			/** @type {[Discord.TextChannel, string, string, Discord.Role | "all", string]} */
+			// @ts-ignore
 			const [channel, ID, mode, role, emoji] = data;
 			/** @type {Array<{ channelID: string, messageID: string, emojiID: string, roleID: string }>} */
 			const channeldata = await sql.all("SELECT * FROM ReactionRoles WHERE channelID =? AND messageID =?", [channel.id, ID]);
-			if (channeldata && channeldata.length == 0 && !mode) return msg.channel.send(`${msg.author.username}, there is no reaction role data for the message ID specified. Try adding one like:\n${this.example}`);
+			if (channeldata && channeldata.length == 0 && !mode) return msg.channel.send(`${msg.author.username}, there is no reaction role data for the message ID specified. Try adding one like:\n${this.examples.join("\n")}`);
 			if (mode && (mode == "add" || mode == "delete")) {
 				if (!msg.member.permissions.has("MANAGE_ROLES")) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage this server's Reaction Roles (Manage Roles)`);
 				if (!role) return msg.channel.send(`${msg.author.username}, you need to provide a role`);
-				if (role.position >= msg.member.roles.highest.position && !msg.guild.ownerID == msg.author.id) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
+				if (typeof role !== "string" && role.position >= msg.member.roles.highest.position && !msg.guild.ownerID == msg.author.id) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that role since it is higher than or equal to your highest`);
 				if (!emoji && !(mode == "delete" && role == "all")) return msg.channel.send(`${msg.author.username}, you also need to provide an emoji`);
 				/** @type {Discord.Message} */
 				let message;
@@ -38,10 +44,10 @@ commands.assign([
 				} catch (e) {
 					return msg.channel.send(`${msg.author.username}, that's not a valid message ID`);
 				}
-				if (mode == "add") {
+				if (mode == "add" && typeof role !== "string") {
 					const emojiid = utils.emojiID(Discord.Util.parseEmoji(emoji));
-					if (!emojiid || !emojiid.usable) return msg.channel.send(`${msg.author.username}, that's not a valid emoji`);
-					if (channeldata && channeldata.length > 0 && channeldata.find(item => item.channelID == channel.id && item.messageID == message.id && item.emojiID == emojiid && item.roleID == role.id)) return msg.channel.send(`${msg.author.username}, that role already exists for that emoji`);
+					if (!emojiid || !emojiid.unique) return msg.channel.send(`${msg.author.username}, that's not a valid emoji`);
+					if (channeldata && channeldata.length > 0 && channeldata.find(item => item.channelID == channel.id && item.messageID == message.id && item.emojiID == emojiid.unique && item.roleID == role.id)) return msg.channel.send(`${msg.author.username}, that role already exists for that emoji`);
 					await sql.run("INSERT INTO ReactionRoles (channelID, messageID, emojiID, roleID) VALUES (?, ?, ?, ?)", [channel.id, message.id, emojiid.unique, role.id]);
 					if (channel.permissionsFor(client.user).has("ADD_REACTIONS") && (!emojiid.custom ? true : client.emojis.cache.get(emojiid.unique)) && !message.reactions.cache.get(emojiid.usable)) {
 						msg.channel.send("One last thing; It looks like that message does not have that emoji reacted to it. Would you like me to react to that message?\ntype yes to confirm or anything else to deny");
@@ -59,10 +65,10 @@ commands.assign([
 						return msg.channel.send("Alright! All of the reaction roles on that message have been deleted.");
 					}
 					const emojiid = utils.emojiID(Discord.Util.parseEmoji(emoji));
-					if (!emojiid || !emojiid.usable) return msg.channel.send(`${msg.author.username}, that's not a valid emoji`);
-					if (channeldata.find(item => item.channelID == channel.id && item.messageID == message.id && item.emojiID == emojiid && item.roleID == role.id)) return msg.channel.send(`${msg.author.username}, that role does not exist for that emoji`);
+					if (!emojiid || !emojiid.unique) return msg.channel.send(`${msg.author.username}, that's not a valid emoji`);
+					if (channeldata.find(item => item.channelID == channel.id && item.messageID == message.id && item.emojiID == emojiid.unique && item.roleID == role.id)) return msg.channel.send(`${msg.author.username}, that role does not exist for that emoji`);
 					await sql.run("DELETE FROM ReactionRoles WHERE channelID =? AND messageID =? AND emojiID =? AND roleID =?", [channel.id, message.id, emojiid, role.id]);
-					if (channel.permissionsFor(client.user).has("MANAGE_MESSAGES") && (!emojiid.custom ? true : client.emojis.cache.get(emojiid.unique)) && message.reactions.cache.get(emojiid.usable) && !channeldata.filter(item => item.emojiID == emojiid.unique).length > 1) {
+					if (channel.permissionsFor(client.user).has("MANAGE_MESSAGES") && (!emojiid.custom ? true : client.emojis.cache.get(emojiid.unique)) && message.reactions.cache.get(emojiid.usable) && channeldata.filter(item => item.emojiID == emojiid.unique).length < 1) {
 						msg.channel.send("One last thing; It looks like that message has that emoji reacted to it and there are no other reaction roles bound to that emoji. Would you like me to remove all of the reactions of that emoji from that message?\ntype yes to confirm or anything else to deny");
 						const collector = channel.createMessageCollector((m => m.author.id == msg.author.id), { max: 1, time: 60000 });
 						await collector.next.then(newmessage => {
@@ -79,7 +85,7 @@ commands.assign([
 					channeldata.map(i => [
 						msg.guild.roles.cache.get(i.roleID) ? msg.guild.roles.cache.get(i.roleID).name : "Unknown",
 						i.roleID,
-						String.fromCodePoint(i.emojiID) ? String.fromCodePoint(i.emojiID) : (client.emojis.cache.get(i.emojiID) ? client.emojis.cache.get(i.emojiID).toString() : i.emojiID)
+						String.fromCodePoint(Number(i.emojiID)) ? String.fromCodePoint(Number(i.emojiID)) : (client.emojis.cache.get(i.emojiID) ? client.emojis.cache.get(i.emojiID).toString() : i.emojiID)
 					]),
 					["left", "left", "left"],
 					2000,
@@ -93,7 +99,7 @@ commands.assign([
 		description: "Main Self Assignable Role interface command",
 		aliases: ["selfassign", "sar", "iam", "iamnot"],
 		category: "roles",
-		example: "^sar \"cool people\"",
+		examples: ["^sar \"cool people\""],
 		async process(msg, suffix) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("This command does not work in DMs.");
 			/** @type {Array<string>} */
@@ -149,7 +155,7 @@ commands.assign([
 		description: "Main Auto Join Role interface command",
 		aliases: ["join", "jr"],
 		category: "roles",
-		example: "^join \"cool people\" add 10min",
+		examples: ["^join \"cool people\" add 10min"],
 		async process(msg, suffix) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("This command does not work in DMs.");
 			const args = ArgumentAnalyser.format(suffix.split(" "));
@@ -157,6 +163,7 @@ commands.assign([
 			await validator.validate();
 			if (args.length > 1 && !validator.usable) return;
 			/** @type {[Discord.Role, "add" | "delete", string, string]} */
+			// @ts-ignore
 			const [role, mode, addtimeout, removetimeout] = validator.collected;
 			/** @type {Array<{ guildID: string, roleID: string, timeout: number, removeAfter: number }>} */
 			const data = await sql.all("SELECT * FROM JoinRoles WHERE guildID =?", msg.guild.id);
@@ -207,7 +214,7 @@ commands.assign([
 		description: "Displays a list of who is in a role",
 		aliases: ["inrole", "in"],
 		category: "roles",
-		example: "^inrole Members",
+		examples: ["^inrole Members"],
 		async process(msg, suffix) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("This command does not work in DMs.");
 			const role = await utils.findRole(msg, suffix);
@@ -228,7 +235,7 @@ commands.assign([
 		description: "Staff command to manage a member's roles",
 		aliases: ["role"],
 		category: "roles",
-		example: "^role Members PapiOphidian",
+		examples: ["^role Members PapiOphidian"],
 		async process(msg, suffix) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("This command does not work in DMs.");
 			if (!msg.member.permissions.has("MANAGE_ROLES")) return msg.channel.send(`${msg.author.username}, you don't have permissions to manage that person's roles (Manage Roles)`);

@@ -1,26 +1,14 @@
+// @ts-check
+
 const Discord = require("discord.js");
 const util = require("util");
 const ReactionMenu = require("@amanda/reactionmenu");
 
 const passthrough = require("../passthrough.js");
 
-const { client, reloadEvent } = passthrough;
+const { client } = passthrough;
 
 const utils = {
-	/**
-	 * @param {events.EventEmitter} target
-	 * @param {string} name
-	 * @param {string} filename
-	 * @param {(...args: Array<any>) => any} code
-	 */
-	addTemporaryListener: function(target, name, filename, code, targetListenMethod = "on") {
-		console.log(`added event ${name}`);
-		target[targetListenMethod](name, code);
-		reloadEvent.once(filename, () => {
-			target.removeListener(name, code);
-			console.log(`removed event ${name}`);
-		});
-	},
 	/**
 	 * @param {any} data
 	 * @param {number} [depth=0]
@@ -50,7 +38,7 @@ const utils = {
 		return result;
 	},
 	/**
-	 * @param {Discord.TextChannel|Discord.DMChannel} channel
+	 * @param {Discord.TextChannel|Discord.DMChannel|Discord.NewsChannel} channel
 	 * @param {string|Discord.MessageEmbed} content
 	 */
 	contentify: function(channel, content) {
@@ -199,6 +187,7 @@ const utils = {
 			channel => channel.name.toLowerCase().includes(string)
 		]);
 		if (!string) {
+			// @ts-ignore
 			if (self) return message.channel;
 			else return null;
 		} else {
@@ -432,7 +421,7 @@ const utils = {
 			let name;
 			if (match && match[0]) name = String(emoji.name.codePointAt(0));
 			else name = emoji.name;
-			return { unique: name, usable: name === emoji.name ? emoji.name : String.fromCodePoint(name), custom: false };
+			return { unique: name, usable: name === emoji.name ? emoji.name : String.fromCodePoint(Number(name)), custom: false };
 		} else return null;
 	},
 	/**
@@ -559,6 +548,7 @@ const utils = {
 			if (test == null) return null;
 			if (!test[1]) return null;
 			/** @type [string, string, string] */
+			// @ts-ignore
 			const [inp, duration, identifier] = test;
 			const num = Number(duration);
 			if (isNaN(num)) return null;

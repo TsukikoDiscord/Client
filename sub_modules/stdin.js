@@ -7,10 +7,12 @@ const util = require("util");
 const vm = require("vm");
 
 const passthrough = require("../passthrough");
-const { config, client, commands, sql, reloader, reloadEvent } = passthrough;
+const { config, client, commands, sql, sync } = passthrough;
 
-const utils = require("./utilities.js");
-reloader.sync("./sub_modules/utilities.js", utils);
+/**
+ * @type {import("./utilities")}
+ */
+const utils = sync.require("./utilities.js");
 
 let starting = true;
 if (client.readyAt != null) starting = false;
@@ -34,7 +36,7 @@ async function customEval(input, context, filename, callback) {
 	return callback(undefined, output);
 }
 
-reloadEvent.once(path.basename(__filename), () => {
+sync.events.once(__filename, () => {
 	console.log("stdin.js does not auto-reload.");
 });
 
@@ -47,8 +49,7 @@ client.once("ready", () => {
 		Object.assign(cli.context, passthrough, { Discord });
 
 		cli.once("exit", () => {
-			if (client.shard) client.shard.killAll();
-			else process.exit();
+			process.exit();
 		});
 	}
 });

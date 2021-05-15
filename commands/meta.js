@@ -1,11 +1,15 @@
+// @ts-check
+
 const Discord = require("discord.js");
 const ReactionMenu = require("@amanda/reactionmenu");
 
 const passthrough = require("../passthrough");
-const { client, config, commands, reloader } = passthrough;
+const { client, config, commands, sync } = passthrough;
 
-const utils = require("../sub_modules/utilities.js");
-reloader.sync("./sub_modules/utilities.js", utils);
+/**
+ * @type {import("../sub_modules/utilities")}
+ */
+const utils = sync.require("../sub_modules/utilities.js");
 
 commands.assign([
 	{
@@ -13,9 +17,9 @@ commands.assign([
 		description: "Displays detailed statistics",
 		aliases: ["statistics", "stats"],
 		category: "meta",
-		example: "^stats",
+		examples: ["^stats"],
 		async process(msg, suffix) {
-			const embed = new Discord.MessageEmbed().setColor("36393E");
+			const embed = new Discord.MessageEmbed().setColor(0x2f3136);
 			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>`;
 			const leadingSpace = "​ ";
 			const stats = utils.getStats();
@@ -51,10 +55,10 @@ commands.assign([
 		description: "You know what this does",
 		aliases: ["ping", "pong"],
 		category: "meta",
-		example: "^ping",
+		examples: ["^ping"],
 		async process(msg, suffix) {
 			const nmsg = await msg.channel.send("Waiting on Discord...");
-			const embed = new Discord.MessageEmbed().setAuthor("Pong!").addFields([{ name: "Heartbeat:", value: `${client.ws.ping.toFixed(0)}ms`, inline: true }, { name: "Latency:", value: `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, inline: true }]).setColor("36393E");
+			const embed = new Discord.MessageEmbed().setAuthor("Pong!").addFields([{ name: "Heartbeat:", value: `${client.ws.ping.toFixed(0)}ms`, inline: true }, { name: "Latency:", value: `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, inline: true }]).setColor(0x2f3136);
 			const content = utils.contentify(msg.channel, embed);
 			if (typeof content == "string") nmsg.edit(content);
 			else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content);
@@ -65,7 +69,7 @@ commands.assign([
 		description: "Add me to a server",
 		aliases: ["invite", "inv"],
 		category: "meta",
-		example: "^invite",
+		examples: ["^invite"],
 		process(msg, suffix) {
 			const embed = new Discord.MessageEmbed()
 				.setTitle("Wanna invite me?")
@@ -79,7 +83,7 @@ commands.assign([
 		description: "Displays information about me",
 		aliases: ["info", "inf"],
 		category: "meta",
-		example: "^info",
+		examples: ["^info"],
 		async process(msg, suffix) {
 			const creator = await client.users.fetch("320067006521147393", true);
 			const embed = new Discord.MessageEmbed()
@@ -107,7 +111,7 @@ commands.assign([
 		description: "Your average help command",
 		aliases: ["help", "h", "commands", "cmds"],
 		category: "meta",
-		example: "^help audio",
+		examples: ["^help audio"],
 		process(msg, suffix) {
 			let embed, permissions;
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
@@ -122,7 +126,7 @@ commands.assign([
 					const def = command.usage.replace(/["'`]/g, "").replace(/:(?:\w)+(?=[>\]|])/g, "");
 					embed = new Discord.MessageEmbed()
 						.setAuthor(`Help for ${command.aliases[0]}`)
-						.setDescription(`Arguments: ${def}\nDescription: ${command.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExample: ${command.example || "N.A."}`)
+						.setDescription(`Arguments: ${def}\nDescription: ${command.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExamples: ${command.examples ? command.examples.join("\n") : "N.A."}`)
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input.\nTip: If you want to treat multiple words separated by a space as 1, use quotation marks (\", ' or `)")
 						.setColor(0x2f3136);
 					msg.channel.send(utils.contentify(msg.channel, embed));

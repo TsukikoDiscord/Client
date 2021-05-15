@@ -1,13 +1,17 @@
+// @ts-check
+
 const Discord = require("discord.js");
 const util = require("util");
 const path = require("path");
 const ReactionMenu = require("@amanda/reactionmenu");
 
 const passthrough = require("../passthrough");
-const { config, client, commands, sql, reloader, reloadEvent } = passthrough;
+const { config, client, commands, sql, sync } = passthrough;
 
-const utils = require("../sub_modules/utilities.js");
-reloader.sync("./sub_modules/utilities.js", utils);
+/**
+ * @type {import("../sub_modules/utilities")}
+ */
+const utils = sync.require("../sub_modules/utilities.js");
 
 const ArgumentAnalyser = require("@amanda/arganalyser");
 
@@ -17,14 +21,14 @@ commands.assign([
 		description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
 		aliases: ["evaluate", "eval"],
 		category: "admin",
-		example: "^eval client.token",
+		examples: ["^eval client.token"],
 		async process(msg, suffix) {
 			const allowed = config.owners.includes(msg.author.id);
 			if (allowed) {
 				if (!suffix) return msg.channel.send("No input");
 				let result, depth;
 				depth = suffix.split("--depth:")[1];
-				depth ? depth = depth.substring(0).split(" ")[0] : undefined;
+				if (depth) depth = depth.substring(0).split(" ")[0];
 				if (!depth) depth = 0;
 				else {
 					depth = Math.floor(Number(depth));
@@ -48,7 +52,7 @@ commands.assign([
 		description: "Executes a shell operation",
 		aliases: ["execute", "exec"],
 		category: "admin",
-		example: "^exec rm -rf /",
+		examples: ["^exec rm -rf /"],
 		async process(msg, suffix) {
 			const allowed = await config.owners.includes(msg.author.id);
 			if (!allowed) return;

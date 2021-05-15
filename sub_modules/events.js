@@ -1,21 +1,25 @@
+// @ts-check
+
 const Discord = require("discord.js");
 const path = require("path");
 const ReactionMenu = require("@amanda/reactionmenu");
 
 const passthrough = require("../passthrough.js");
-const utils = require("./utilities.js");
 
-const { client, reloader, sql, config, commands } = passthrough;
+const { client, sync, sql, config, commands } = passthrough;
 
-reloader.sync("./sub_modules/utilities.js", utils);
+/**
+ * @type {import("./utilities")}
+ */
+const utils = sync.require("./utilities.js");
 
 const lastAttemptedLogins = [];
 let starting = true;
 if (client.readyAt != null) starting = false;
 
-if (starting) utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady);
-utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage);
-utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), data => {
+if (starting) sync.addTemporaryListener(client, "ready", manageReady);
+sync.addTemporaryListener(client, "message", manageMessage);
+sync.addTemporaryListener(client, "messageUpdate", data => {
 	if (data instanceof Discord.Message) return manageMessage(data);
 	if (data && data.id && data.channel_id && data.content && data.author) {
 		const channel = client.channels.cache.get(data.channel_id);
@@ -25,10 +29,10 @@ utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), d
 		}
 	}
 });
-utils.addTemporaryListener(client, "guildMemberAdd", path.basename(__filename), manageGuildMemberAdd);
-utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), manageReactionAdd);
-utils.addTemporaryListener(client, "messageReactionRemove", path.basename(__filename), manageReactionRemove);
-utils.addTemporaryListener(client, "shardDisconnected", path.basename(__filename), (reason) => {
+sync.addTemporaryListener(client, "guildMemberAdd", manageGuildMemberAdd);
+sync.addTemporaryListener(client, "messageReactionAdd", manageReactionAdd);
+sync.addTemporaryListener(client, "messageReactionRemove", manageReactionRemove);
+sync.addTemporaryListener(client, "shardDisconnected", (reason) => {
 	if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}.`);
 	if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now() - lastAttemptedLogins.slice(-1)[0] / 1000)} seconds ago.`);
 	lastAttemptedLogins.push(Date.now());
@@ -44,8 +48,8 @@ utils.addTemporaryListener(client, "shardDisconnected", path.basename(__filename
 		client.login(config.bot_token);
 	});
 });
-utils.addTemporaryListener(client, "error", path.basename(__filename), manageError);
-utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filename), manageError);
+sync.addTemporaryListener(client, "error", manageError);
+sync.addTemporaryListener(process, "unhandledRejection", manageError);
 
 /**
  * @param {Discord.Message} msg
@@ -139,8 +143,10 @@ async function manageGuildMemberAdd(member) {
  */
 async function manageReactionAdd(data, channel, user) {
 	if (user.bot) return;
+	// @ts-ignore
 	ReactionMenu.handler(data, channel, user, client);
 	if (channel instanceof Discord.DMChannel) return;
+	// @ts-ignore
 	const id = utils.emojiID(data.emoji);
 	/** @type {Array<{ emojiID: string, roleID: string }>} */
 	const reactions = await sql.all("SELECT emojiID, roleID FROM ReactionRoles WHERE messageID =? AND emojiID =?", [data.message_id, id.unique]);
@@ -158,6 +164,7 @@ async function manageReactionAdd(data, channel, user) {
 async function manageReactionRemove(data, channel, user) {
 	if (!(channel instanceof Discord.TextChannel)) return;
 	if (user.bot) return;
+	// @ts-ignore
 	const id = utils.emojiID(data.emoji);
 	/** @type {Array<{ emojiID: string, roleID: string }>} */
 	const reactions = await sql.all("SELECT emojiID, roleID FROM ReactionRoles WHERE messageID =? AND emojiID =?", [data.message_id, id.unique]);

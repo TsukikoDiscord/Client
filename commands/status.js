@@ -1,8 +1,12 @@
-const passthrough = require("../passthrough.js");
-const { config, client, reloader, commands } = passthrough;
+// @ts-check
 
-const utils = require("../sub_modules/utilities.js");
-reloader.sync("./sub_modules/utilities.js", utils);
+const passthrough = require("../passthrough.js");
+const { config, client, sync, commands } = passthrough;
+
+/**
+ * @type {import("../sub_modules/utilities")}
+ */
+const utils = sync.require("../sub_modules/utilities.js");
 
 const updateTime = 5 * 60 * 1000;
 let starting = true;
@@ -45,7 +49,7 @@ commands.assign([
 		description: "Make an announcement with the client activity",
 		category: "admin",
 		aliases: ["announce"],
-		example: "^announce 60000 sub to papiophidian on twitch | ^help",
+		examples: ["^announce 60000 sub to papiophidian on twitch | ^help"],
 		process(msg, suffix) {
 			const allowed = config.owners.includes(msg.author.id);
 			if (!allowed) return;
