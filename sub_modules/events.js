@@ -91,7 +91,7 @@ async function manageReady() {
 		console.log(`Successfully logged in as ${client.user.username}`);
 		process.title = client.user.username;
 
-		/** @type {Array<{ guildID: string, userID: string, roleID: string, action: string, date: number }>} */
+		/** @type {Array<{ guildID: string, userID: string, roleID: string, action: number, date: number }>} */
 		const missedEvents = await sql.all("SELECT * FROM OfflineEvents");
 		if (!missedEvents || missedEvents.length < 1) return;
 		/** @type {Array<string>} */
@@ -116,8 +116,8 @@ async function manageReady() {
 			const member = guild.members.cache.get(event.userID);
 			if (!member) continue;
 			const roles = missedEvents.filter(e => e.guildID === guild.id && e.userID === member.id);
-			const add = roles.filter(r => r.action === "add").map(e => { return { roleID: e.roleID, timeout: ((event.date - Date.now()) >= 0 ? (event.date - Date.now()) : 0), removeAfter: 0 };});
-			const remove = roles.filter(r => r.action === "remove").map(e => { return { roleID: e.roleID, removeAfter: ((event.date - Date.now()) >= 0 ? (event.date - Date.now()) : 0) };});
+			const add = roles.filter(r => r.action === 0).map(e => { return { roleID: e.roleID, timeout: ((event.date - Date.now()) >= 0 ? (event.date - Date.now()) : 0), removeAfter: 0 };});
+			const remove = roles.filter(r => r.action === 1).map(e => { return { roleID: e.roleID, removeAfter: ((event.date - Date.now()) >= 0 ? (event.date - Date.now()) : 0) };});
 			await sql.run("DELETE FROM OfflineEvents WHERE guildID =? AND userID =?", [guild.id, member.id]);
 			if (add.length > 0) await addRoles(add, member);
 			if (remove.length > 0) await removeRoles(remove, member);
@@ -200,7 +200,7 @@ async function removeRoles(roles, member) {
 		}
 		const dRole = member.guild.roles.cache.get(role.roleID);
 		if (role.removeAfter !== 0) {
-			sql.run("INSERT INTO OfflineEvents (guildID, userID, roleID, action, date) VALUES (?, ?, ?, ?, ?)", [guild.id, member.id, role.roleID, "remove", (Date.now() + role.removeAfter)]);
+			sql.run("INSERT INTO OfflineEvents (guildID, userID, roleID, action, date) VALUES (?, ?, ?, ?, ?)", [guild.id, member.id, role.roleID, 1, (Date.now() + role.removeAfter)]);
 			setTimeout(() => {
 				if (!member.roles.cache.get(role.roleID)) return;
 				if (!guild.members.cache.get(member.id)) return;
@@ -232,7 +232,7 @@ async function addRoles(roles, member) {
 		const dRole = member.guild.roles.cache.get(role.roleID);
 		if (member.roles.cache.get(role.roleID)) continue;
 		if (role.timeout !== 0) {
-			sql.run("INSERT INTO OfflineEvents (guildID, userID, roleID, action, date) VALUES (?, ?, ?, ?, ?)", [guild.id, member.id, role.roleID, "add", (Date.now() + role.timeout)]);
+			sql.run("INSERT INTO OfflineEvents (guildID, userID, roleID, action, date) VALUES (?, ?, ?, ?, ?)", [guild.id, member.id, role.roleID, 0, (Date.now() + role.timeout)]);
 			setTimeout(() => {
 				if (!guild.members.cache.get(member.id)) return;
 				if (!dRole.editable) return;
